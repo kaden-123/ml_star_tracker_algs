@@ -1,0 +1,128 @@
+"""
+
+
+
+
+
+  --generate num-images
+              Generates num-images many images. Mutually exclusive with --png.
+
+       --generate-x-resolution pixels
+              Sets the horizontal resolution of the generated image(s) to
+              pixels. Defaults to 1024.
+
+       --generate-y-resolution pixels
+              Sets the vertical resolution of the generated image(s) to
+              pixels. Defaults to 1024.
+
+       --generate-zero-mag-photons num-photoelectrons
+              A star with magnitude 0 will cause num-photoelectrons many
+              photoelectrons to be received by the sensor per time unit. A
+              default value of 20,000 is chosen. See Liebe's, "tutorial on
+              star tracker accuracy" for theoretical information on how to
+              calculate this.
+
+       --generate-saturation-photons saturation-photoelectrons
+
+              When a pixel receives at least this many photoelectrons, it will
+              appear completely white (at least before other noise is
+              applied). Note that, because of noise, a pixel may still appear
+              completely white if it receives less than saturation-
+              photoelectrons many photoelectrons.
+
+       --generate-spread-stddev stddev
+              Sets the standard deviation of the Gaussian distribution we use
+              to approximate the distribution of photons received from each
+              star. Defaults to 1.0.
+
+       --generate-shot-noise trueøfalse
+              Enables or disables shot noise simulation in generated images.
+              Defaults to true.
+
+       --generate-dark-current noise-level
+              Set observed brightness of dark current in the image, from 0 (no
+              dark noise) to 1 (whole image pure white). Defaults to 0.1. cf
+              --generate-sensitivity to control shot noise intensity.
+
+       --generate-read-noise-stddev stddev
+              Sets the standard deviation of Gaussian noise in the generated
+              image(s) to stddev. Noise is measured in observed brightness,
+              where 1 is the difference between pure white and pure black.
+
+
+
+              --generate-centroids-only Æcentroids-onlyÅ
+              If set (argument is not needed, but can be a bool), will not
+              actually generate any pixel data -- only centroid positions.
+              Much faster if only evaluating a star-id algorithm (eg sky
+              coverage testing).
+
+       --generate-ra, --generate-de, --generate-roll degrees
+              Set the right ascension, declination, and roll of the generated
+              image.
+
+       --generate-random-attitudes ÆenableÅ
+              Generate a random attitude for each generated image. Ignores
+              specified ra, de, and roll if set.
+
+       --generate-exposure exposure-time
+              Controls the exposure time of generated images. Default is 0.2.
+              Affects both motion blur and number of photons received per
+              star.
+
+       --generate-blur-ra, --generate-blur-de, --generate-blur-roll degrees
+              Set the motion blur direction. By default, there is no motion
+              blur (i.e., all of these are 0.0)
+
+       --generate-readout-time readout-time
+              Rolling shutter readout time for generated images. This is the
+              time it takes from starting to capture the first row until
+              finishing capturing the last row. Defaults to 0 (rolling shutter
+              simulation disabled).
+
+       --generate-false-stars num-false-stars
+              The number of false stars generated. All are placed uniformly
+              randomly around the celestial sphere. Defaults to 0 (no false
+              stars generated)
+
+       --generate-false-min-mag minimum-magnitude
+              The minimum (weakest) magnitude that generated false stars
+              should have. Defaults to 8.0.
+
+       --generate-false-max-mag maximum-magnitude
+              The maximum (strongest) magnitude that generated false stars
+              should have. Defaults to 1.0.
+
+       --generate-perturb-centroids perturbation-stddev
+              Introduce artificial centroiding error. If provided, all the
+              input and expected centroids will be shifted randomly according
+              to a 2D Gaussian distribution with the given standard deviation
+              (defaults to 0.2 pixel stddev). For evaluating star-id
+              performance vs centroid error.
+
+              performance vs centroid error.
+
+       --generate-cutoff-mag half-chance-mag
+              When evaluating star-id algos on generated images, we don't want
+              every single catalog star in the FOV to be fed into the star-id
+              algorithm. This option lets you control that! Every catalog star
+              has some probability of being turned into an input centroid, and
+              this specifies the magnitude that will have a 50% probability of
+              being included in the input centroid list. An overly complicated
+              mathematical function determines how that probability changes as
+              you increase and decrease the magnitude from there, but it falls
+              to 0 or 1 pretty quickly at either side.
+
+              Set to a value of 100 or greater to disable cutoff and include
+              all centroids.
+
+       --generate-oversampling num-samples
+              Perform num-samples many samples per pixel when generating
+              images. Effectively performs antialiasing. num-samples must be a
+              perfect square. Default 4.
+
+       --generate-seed seed
+              An integer seed to pass to the random number generator used
+              during image generation.
+  
+  """
