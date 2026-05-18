@@ -20,76 +20,82 @@ import numpy as np
 # most formulas taken from here https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
 
 def e_to_q(euler):
-    """
-    Quaternion [w, x, y, z] from 3-2-1 Euler [roll, pitch, yaw]
-    (rotation order: ZYX)
-    """
+    """ returns numpy [w, x, y, z] given euler 3 2 1 """
     phi, theta, psi = euler  # roll, pitch, yaw
 
-    c1 = np.cos(phi / 2)
-    s1 = np.sin(phi / 2)
+    c_phi = np.cos(phi / 2)
+    s_phi = np.sin(phi / 2)
 
-    c2 = np.cos(theta / 2)
-    s2 = np.sin(theta / 2)
+    c_theta = np.cos(theta / 2)
+    s_theta = np.sin(theta / 2)
 
-    c3 = np.cos(psi / 2)
-    s3 = np.sin(psi / 2)
+    c_psi = np.cos(psi / 2)
+    s_psi = np.sin(psi / 2)
 
-    w = c1*c2*c3 + s1*s2*s3
-    x = s1*c2*c3 - c1*s2*s3
-    y = c1*s2*c3 + s1*c2*s3
-    z = c1*c2*s3 - s1*s2*c3
+    w = c_phi * c_theta * c_psi + s_phi * s_theta * s_psi
+    x = s_phi * c_theta * c_psi - c_phi * s_theta * s_psi
+    y = c_phi * s_theta * c_psi + s_phi * c_theta * s_psi
+    z = c_phi * c_theta * s_psi - s_phi * s_theta * c_psi
 
     return np.array([w, x, y, z])
 
 def q_to_e(q):
-    """
-    Returns Euler angles [roll, pitch, yaw] (3-2-1 / ZYX)
-    """
+    """ returns np array euler angles 3 2 1 given normalized quaternion w, x, y, z"""
+    q = q / np.linalg.norm(q)
     w, x, y, z = q
 
-    # roll (x)
-    sinr_cosp = 2 * (w * x + y * z)
-    cosr_cosp = 1 - 2 * (x*x + y*y)
-    roll = np.arctan2(sinr_cosp, cosr_cosp)
-
-    # pitch (y)
-    sinp = 2 * (w * y - z * x)
-    sinp = np.clip(sinp, -1.0, 1.0)
-    pitch = np.arcsin(sinp)
-
-    # yaw (z)
-    siny_cosp = 2 * (w * z + x * y)
-    cosy_cosp = 1 - 2 * (y*y + z*z)
-    yaw = np.arctan2(siny_cosp, cosy_cosp)
+    roll = np.arctan2(2 * (w * x + y * z), 1 - 2 * (x*x + y*y))
+    pitch = (-np.pi / 2) + (2 * np.arctan2(np.sqrt(1 + 2 * (w * y - x * z)), np.sqrt(1 - 2 * (w * y - x * z))))
+    yaw = np.arctan2( 2 * (w * z + x * y), 1 - 2 * (y*y + z*z))
 
     return np.array([roll, pitch, yaw])
 
 def q_to_DCM(q):
-    """ given a quaternion in the form np.array([w, x, y, z]) return DCM as numpy mat """
+    """ given a quaternion w, x, y, z return DCM as numpy mat """
+    q = q / np.linalg.norm(q)
     w, x, y, z = q
     R = np.array([
         [1 - 2*(y*y + z*z), 2*(x*y - z*w), 2*(x*z + y*w)],
         [2*(x*y + z*w), 1 - 2*(x*x + z*z), 2*(y*z - x*w)],
         [2*(x*z - y*w), 2*(y*z + x*w), 1 - 2*(x*x + y*y)]
     ])
-    return R
+    return R.T
 
 def DCM_to_q(DCM):
-    """ given a DCM as numpy mat, return a quateron in the for np.array([w, x, y, z]) """
-    t_one = DCM[0][0]
-    t_two = DCM[1][1]
-    t_three = DCM[2][2]
-    
-    x = np.sqrt((1 + t_one - t_two - t_three)) / 2
-    y = np.sqrt((1 - t_one + t_two - t_three)) / 2
-    z = np.sqrt((1 - t_one - t_two + t_three)) / 2
-    w = np.sqrt((1 + t_one + t_two + t_three)) / 2
+    """ given a DCM as numpy mat, return a quaternion np array w, x, y, z """
+    w2 = (1 + DCM[0][0] + DCM[1][1] + DCM[2][2]) / 4
+    x2 = (1 + DCM[0][0] - DCM[1][1] - DCM[2][2]) / 4
+    y2 = (1 - DCM[0][0] + DCM[1][1] - DCM[2][2]) / 4
+    z2 = (1 - DCM[0][0] - DCM[1][1] + DCM[2][2]) / 4
 
-    return np.array([w, x, y, z])
+    largest = np.argmax([w2, x2, y2, z2])
+
+    match largest:
+        case 0:  
+            w = np.sqrt(w2)
+            x = (DCM[1][2] - DCM[2][1]) / (4*w)  
+            y = (DCM[2][0] - DCM[0][2]) / (4*w) 
+            z = (DCM[0][1] - DCM[1][0]) / (4*w)  
+        case 1:  
+            x = np.sqrt(x2)
+            w = (DCM[1][2] - DCM[2][1]) / (4*x)  
+            y = (DCM[0][1] + DCM[1][0]) / (4*x)  
+            z = (DCM[2][0] + DCM[0][2]) / (4*x)  
+        case 2: 
+            y = np.sqrt(y2)
+            w = (DCM[2][0] - DCM[0][2]) / (4*y)  
+            x = (DCM[0][1] + DCM[1][0]) / (4*y)  
+            z = (DCM[1][2] + DCM[2][1]) / (4*y)  
+        case 3:  
+            z = np.sqrt(z2)
+            w = (DCM[0][1] - DCM[1][0]) / (4*z)  
+            x = (DCM[2][0] + DCM[0][2]) / (4*z)  
+            y = (DCM[1][2] + DCM[2][1]) / (4*z)
+
+    return np.array([w, x, y, z]) / np.linalg.norm([w, x, y, z])
 
 def e_to_DCM(euler):
-    """DCM from 3-2-1 Euler angles [roll, pitch, yaw]"""
+    """np mat DCM from 3-2-1 Euler angles"""
 
     phi, theta, psi = euler
 
@@ -119,15 +125,15 @@ def e_to_DCM(euler):
     ])
 
 def DCM_to_e(DCM):
-    """ returns a np array roll pitch yaw (3 - 2 - 1) from given DCM mat """
-    theta = np.arcsin(DCM[0, 2])
-    phi = np.arctan2(-DCM[1, 2], DCM[2, 2])  
-    psi = np.arctan2(-DCM[0, 1], DCM[0, 0])   
+    """ returns a np array 3 2 1 from given DCM mat (DCM must be ortho) """
+    theta = np.arcsin(-DCM[0, 2])
+    phi = np.arctan2(DCM[1, 2], DCM[2, 2])  
+    psi = np.arctan2(DCM[0, 1], DCM[0, 0])   
 
     return np.array([phi, theta, psi])
 
 def DCM(e, d):
-    """ given two lists 3d basis np vectors, return DCM for D -> E """
+    """ given two lists 3d orthonormal basis np vectors, return DCM for D -> E """
     D = np.column_stack([d[0], d[1], d[2]])
     E = np.column_stack([e[0], e[1], e[2]])  
     DCM = np.matmul(D.T, E)
