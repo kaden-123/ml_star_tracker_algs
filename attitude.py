@@ -1,23 +1,7 @@
 import numpy as np
-
-#takes in array of cam vectors and cat vectors to given optimal quaternion
-# def davenportq(bi, ri, a):
-    
-#     B = a * np.matmul(bi, ri.T)
-#     S = B + B.T
-#     z = np.array([B[1][2] - B[2][1], B[2][0] - B[0][2], B[0][1] - B[1][0]])
-#     S - np.identity(3) * np.trace(B)
-#     z = z.reshape(3, 1)
-#     K = np.block([
-#         [np.array([np.trace(B)]), z.T],
-#         [z, S - np.trace(B) * np.identity(3)]
-#     ])
-#     eigens = np.linalg.eig(K)
-#     q = eigens[1][np.argmax(eigens[0])]
-#     q = q / np.linalg.norm(q)
-#     return q;
-
 # most formulas taken from here https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
+# also note that all inputted angles are in radians
+
 
 def e_to_q(euler):
     """ returns numpy [w, x, y, z] given euler 3 2 1 """
@@ -136,7 +120,12 @@ def DCM(e, d):
     """ given two lists 3d orthonormal basis np vectors, return DCM for D -> E """
     D = np.column_stack([d[0], d[1], d[2]])
     E = np.column_stack([e[0], e[1], e[2]])  
-    DCM = np.matmul(D.T, E)
+    DCM = np.matmul(E.T, D)
 
     return DCM
+
+def q_mul(q1, q2):
+    test = 1
+    
+    
     

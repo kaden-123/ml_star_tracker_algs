@@ -1,27 +1,36 @@
 import numpy as np
 import pandas as pd
+from attitude import (
+    e_to_q,
+    q_to_e,
+    e_to_DCM,
+    DCM_to_e,
+    DCM_to_q,
+    q_to_DCM,
+)
 
 class Camera:
     def __init__(self, data):
         self.data = data
-        self.direction  = np.zeros(4)
-
+        self.direction = np.array([1.0, 0.0, 0.0, 0.0])
         coords = self.data[["x", "y", "z"]].to_numpy()
         coords /= np.linalg.norm(coords, axis = 1, keepdims=1) 
         self.data = pd.concat([pd.DataFrame(coords, columns = ["ux", "uy", "uz"], index=data.index), data], axis=1)
          
     def celest_point(self, ra, dec, roll):
         """ point cam to given ra, dec, and roll."""
-        yaw = ra / 12 
+        yaw = ra / 15
         pitch = -dec
-        self.direction = e_to_q(np.array([roll, pitch, yaw]))
+        self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
         
     def id_point(self, id, roll):
         """ points camera to star given hr id """
         mask = self.data["hr"] == id
-        ra = self.data.loc[mask, "ra"].iloc[0] / 12
+        ra = self.data.loc[mask, "ra"].iloc[0] / 15
         dec = -self.data.loc[mask, "dec"].iloc[0]
-        self.direction = e_to_q(np.array([roll, dec, ra]))
+        yaw = ra / 15
+        pitch = -dec
+        self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
         
     def rand_point(self):
         """ points to random direction (using shoemake alg) """
@@ -33,20 +42,25 @@ class Camera:
         self.direction = np.array([w, x, y, z])
         
     def create_centroids(self, focal, res, pixel_pitch, sensor_size):
-        """ returns np array [id, px, py] of simulated visible centroids """
+        """ returns np array [id, px, py] of simulated visible centroids 
+            assumes pixel pitch 1 if None 
+        """
+        # TODO: make option to only put in FOV
         W, H = res
         if sensor_size is not None:
             sx, sy = sensor_size
+            #assumes that pixel pitch is same for both horizontal and vertical
             pixel_pitch = sensor_size[0] / res[0]
-        elif pixel_pitch is not None:
-            sx = W * pixel_pitch   # sensor width  in mm
-            sy = H * pixel_pitch   # sensor height in mm
+        elif pixel_pitch is None:
+            pixel_pitch = 1
             
+        sx = W * pixel_pitch   # sensor width  in mm
+        sy = H * pixel_pitch   # sensor height in mm
+    
         fovx = 2 * np.arctan(sx / (2 * focal))   
         fovy = 2 * np.arctan(sy / (2 * focal))
 
         #use quaternion as a rotation to turn rotate into camera frame
-        #yada yah
         celest_to_cam_DCM = (q_to_DCM(self.direction))
         celest_star_direc = np.array(self.data[["ux", "uy", "uz"]])
         cam_star_direc = celest_star_direc @ celest_to_cam_DCM.T
@@ -70,12 +84,19 @@ class Camera:
         #return new pandas df (maybe just think of returning np directly)
         return pd.DataFrame(np.column_stack([ids[mask], img_px, img_py]), columns=["hr", "px", "py"])
         
-    def rotate(self):
+    def q_rotate(self, q):
         """ rotate camera using specified quaternion """
+        # idkn just multipy the quaternion
+        test = 1
+
+    def DCM_rotate(self, DCM):
+        test = 1
+        
+    def euler_rotate(self, euler):
         test = 1
         
     def roll(self, n):
         """ roll camera orientation by n deg) """
-        test = 1
+        
         
         
