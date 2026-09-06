@@ -28,7 +28,7 @@ class Camera:
         mask = self.data["hr"] == id
         ra = self.data.loc[mask, "ra"].iloc[0] / 15
         dec = -self.data.loc[mask, "dec"].iloc[0]
-        yaw = ra / 15
+        yaw = ra
         pitch = -dec
         self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
         
@@ -50,13 +50,11 @@ class Camera:
         if sensor_size is not None:
             sx, sy = sensor_size
             #assumes that pixel pitch is same for both horizontal and vertical
-            pixel_pitch = sensor_size[0] / res[0]
-        elif pixel_pitch is None:
-            pixel_pitch = 1
-            
-        sx = W * pixel_pitch   # sensor width  in mm
-        sy = H * pixel_pitch   # sensor height in mm
-    
+        else:
+            pixel_pitch = 1 if pixel_pitch is None else pixel_pitch
+            sx = W * pixel_pitch   # sensor width  in mm
+            sy = H * pixel_pitch   # sensor height in mm
+
         fovx = 2 * np.arctan(sx / (2 * focal))   
         fovy = 2 * np.arctan(sy / (2 * focal))
 
