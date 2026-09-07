@@ -7,6 +7,7 @@ from attitude import (
     DCM_to_e,
     DCM_to_q,
     q_to_DCM,
+    q_mul
 )
 
 class Camera:
@@ -78,20 +79,6 @@ class Camera:
         #return new pandas df (maybe just think of returning np directly)
         return pd.DataFrame(np.column_stack([ids[mask], img_px, img_py]), columns=["hr", "px", "py"])
 
-        
-    import numpy as np
-
-
-    def q_mul(q1, q2):
-        w1, x1, y1, z1 = q1
-        w2, x2, y2, z2 = q2
-    
-        return np.array([
-            w1*w2 - x1*x2 - y1*y2 - z1*z2,
-            w1*x2 + x1*w2 + y1*z2 - z1*y2,
-            w1*y2 - x1*z2 + y1*w2 + z1*x2,
-            w1*z2 + x1*y2 - y1*x2 + z1*w2,
-        ])
     
     def roll_camera(camera, m):
         """Roll the current camera orientation by n degrees"""
@@ -102,8 +89,4 @@ class Camera:
     
         camera.direction = q_mul(camera.direction, q_roll)
         camera.direction /= np.linalg.norm(camera.direction)
-
-        
-        
-        
         
