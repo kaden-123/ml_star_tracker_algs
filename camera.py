@@ -19,18 +19,14 @@ class Camera:
          
     def celest_point(self, ra, dec, roll):
         """ point cam to given ra, dec, and roll."""
-        yaw = ra / 15
+        yaw = ra * 15
         pitch = -dec
         self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
         
     def id_point(self, id, roll):
         """ points camera to star given hr id """
-        mask = self.data["hr"] == id
-        ra = self.data.loc[mask, "ra"].iloc[0] / 15
-        dec = -self.data.loc[mask, "dec"].iloc[0]
-        yaw = ra
-        pitch = -dec
-        self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
+        row = self.data.loc[self.data["hr"].eq(id)].iloc[0]
+        self.celest_point(row["ra"], row["dec"], roll)
         
     def rand_point(self):
         """ points to random direction (using shoemake alg) """
@@ -81,20 +77,33 @@ class Camera:
         
         #return new pandas df (maybe just think of returning np directly)
         return pd.DataFrame(np.column_stack([ids[mask], img_px, img_py]), columns=["hr", "px", "py"])
-        
-    def q_rotate(self, q):
-        """ rotate camera using specified quaternion """
-        # idkn just multipy the quaternion
-        test = 1
 
-    def DCM_rotate(self, DCM):
-        test = 1
         
-    def euler_rotate(self, euler):
-        test = 1
+    import numpy as np
+
+
+    def q_mul(q1, q2):
+        w1, x1, y1, z1 = q1
+        w2, x2, y2, z2 = q2
+    
+        return np.array([
+            w1*w2 - x1*x2 - y1*y2 - z1*z2,
+            w1*x2 + x1*w2 + y1*z2 - z1*y2,
+            w1*y2 - x1*z2 + y1*w2 + z1*x2,
+            w1*z2 + x1*y2 - y1*x2 + z1*w2,
+        ])
+    
+    def roll_camera(camera, m):
+        """Roll the current camera orientation by n degrees"""
+        half_angle = np.deg2rad(m) / 2
+        q_roll = np.array([
+            np.cos(half_angle), np.sin(half_angle), 0.0, 0.0,
+        ])
+    
+        camera.direction = q_mul(camera.direction, q_roll)
+        camera.direction /= np.linalg.norm(camera.direction)
+
         
-    def roll(self, n):
-        """ roll camera orientation by n deg) """
         
         
         
