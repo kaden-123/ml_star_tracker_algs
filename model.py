@@ -17,11 +17,11 @@ class star_tracker_v1(nn.Module):
         )
 
         self.grp2 = nn.Sequential(
-            nn.Linear(hidden, hidden_two),
+            nn.Linear(hidden_one, hidden_two),
             nn.ReLU(),
             nn.BatchNorm1d(hidden_two),
             nn.Dropout(p=0.2),
-            nn.Linear(hidden_two, n_classes
+            nn.Linear(hidden_two, n_classes)
         )
         
     def forward(self, x): 
