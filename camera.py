@@ -47,6 +47,7 @@ class Camera:
         if sensor_size is not None:
             sx, sy = sensor_size
             #assumes that pixel pitch is same for both horizontal and vertical
+            pixel_pitch = sx / W if pixel_pitch is None else pixel_pitch
         else:
             pixel_pitch = 1 if pixel_pitch is None else pixel_pitch
             sx = W * pixel_pitch   # sensor width  in mm
