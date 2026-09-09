@@ -3,7 +3,7 @@ from torch import nn
 import h5py
 from torch.utils.data import Dataset
 
-class star_tracker_v1(nn.Module):
+class pole_nn(nn.Module):
     def __init__(self, n_bins, n_classes, hidden_one, hidden_two):
         super().__init__()
 
