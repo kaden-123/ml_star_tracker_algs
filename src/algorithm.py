@@ -1,6 +1,4 @@
-import torch
 import numpy as np
-import pandas as pd
 
 #bi array of camera star vectors
 #ri array of reference celestial star vectors

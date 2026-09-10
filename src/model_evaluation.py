@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from model import pole_nn
+from pole_nn import pole_nn
 
 def pole_nn_eval(cam, idx_to_hr, FOCAL, RES, CX, CY, coords):
     N_BINS = 25

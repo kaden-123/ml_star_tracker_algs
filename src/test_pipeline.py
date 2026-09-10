@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import argparse
+from pathlib import Path
 from camera import Camera
 from model_evaluation import pole_nn_eval
 from algorithm import davenportq
@@ -25,6 +26,13 @@ MODEL_FUNCTIONS = {
     "pole_nn": pole_nn_eval
 }
 
+
+def hr_interval(value):
+    number = float(value)
+    if not 0 <= number <= 9029:
+        raise argparse.ArgumentTypeError("No HR IDS outside of 0 to 9029")
+    return number
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
@@ -33,11 +41,14 @@ def parse_arguments():
                                         help="Only one model available: pole__nn")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-i", "--id_point", nargs=2, type=float, help="Given int, point camera to the corresponding HR ID with given roll")
+    group.add_argument("-i", "--id_point", nargs=2, type=hr_interval, 
+                       help="Given int, point camera to the corresponding HR ID with given roll")
 
-    group.add_argument("-r", "--rand_point", action="store_true", help="point camera to random point in space")
+    group.add_argument("-r", "--rand_point", action="store_true", 
+                       help="point camera to random point in space")
 
-    group.add_argument("-c", "--celest_point", nargs=3, type=float, help="point camera given celestial coordinates and lastly roll")
+    group.add_argument("-c", "--celest_point", nargs=3, type=float, 
+                       help="point camera given celestial coordinates and lastly roll")
 
     args = parser.parse_args()
     model_name = args.model
@@ -51,16 +62,19 @@ def parse_arguments():
 
     return (model_name, point)
 
-def main():
-    model_name, point = parse_arguments()
+def main():    
+    data_path = Path("./data/hygdata_v42.csv")
+    if not data_path.exists():
+        raise FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
 
-    data_path = "./hygdata_v42.csv"
     data = pd.read_csv(data_path)
     data.drop_duplicates(subset="hr", inplace=True)
     data = data[1:]
     mask = data["hr"].notna()
 
     cam = Camera(data[mask])
+
+    model_name, point = parse_arguments()
 
     if point[0] == "id":
         star_id, roll = point[1]
@@ -103,8 +117,6 @@ def main():
     q_est = davenportq(bi, ri, 1)
 
     celest_to_cam_DCM = q_to_DCM(q_est)
-    # test = ri @ R.T
-    # test /= np.linalg.norm(test, axis = 1, keepdims=True)
 
     boresight_celestial = celest_to_cam_DCM .T @ np.array([1.0, 0.0, 0.0])
     boresight_celestial /= np.linalg.norm(boresight_celestial)
