@@ -137,7 +137,7 @@ def train():
     seed = 1
     random.seed(seed)
 
-    ROOT = Path(__file__).resolve().parent().parent()
+    ROOT = Path(__file__).resolve().parent().parent().parent()
     data_path = ROOT / "data" / "hygdata_v42.csv"
     if not data_path.exists():
         FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
