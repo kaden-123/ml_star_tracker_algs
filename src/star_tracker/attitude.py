@@ -1,7 +1,9 @@
-import numpy as np
-# most formulas taken from here https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
-# also note that all inputted angles are in radians
+"""
+most formulas taken from here https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
+also note that all inputted angles are in radians
+"""
 
+import numpy as np
 
 def e_to_q(euler):
     """ returns numpy [w, x, y, z] given euler 3 2 1 """

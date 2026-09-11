@@ -1,6 +1,9 @@
 import torch
 import numpy as np
-from pole_nn import pole_nn
+from pathlib import Path
+from .pole_nn.pole_nn import pole_nn
+
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 def pole_nn_eval(cam, idx_to_hr, FOCAL, RES, CX, CY, coords):
     N_BINS = 25
@@ -12,7 +15,9 @@ def pole_nn_eval(cam, idx_to_hr, FOCAL, RES, CX, CY, coords):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = pole_nn(N_BINS, N_STAR_CLASSES, HIDDEN_ONE, HIDDEN_TWO)
-    model.load_state_dict(torch.load('model_weights.pth', weights_only=True))
+    model_name = input("Input .pth file to use as model weights: ")
+    model_path = ROOT / "data" / model_name
+    model.load_state_dict(torch.load(model_path, weights_only=True))
 
     center = np.array([RES[1] / 2, RES[0] / 2])
     center_distance = np.linalg.norm((coords[["px", "py"]] - center), axis = 1)

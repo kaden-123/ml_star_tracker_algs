@@ -12,9 +12,9 @@ from torch import nn
 from pathlib import Path
 from torch.utils.data import DataLoader, Subset
 from sklearn.model_selection import train_test_split
-from pole_nn import pole_nn, H5Data
+from .pole_nn import pole_nn, H5Data
 
-ROOT = Path(__file__).resolve().parent().parent().parent()
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 def positive_int(value):
     number = int(value)
@@ -101,13 +101,13 @@ def parse_arguments():
     train_parser.add_argument(
         "--hidden-size-1",
         type=positive_int,
-        default=64,
+        default=128,
         help="Size of hidden layer 1 (default: %(default)s)",
     )
     train_parser.add_argument(
         "--hidden-size-2",
         type=positive_int,
-        default=64,
+        default=128,
         help="Size of hidden layer 2 (default: %(default)s)",
     )
     train_parser.add_argument(
@@ -135,14 +135,19 @@ def parse_arguments():
     test_parser.add_argument(
         "--hidden-size-1",
         type=positive_int,
-        default=64,
+        default=128,
         help="Size of hidden layer 1 used by the saved model (default: %(default)s)",
     )
     test_parser.add_argument(
         "--hidden-size-2",
         type=positive_int,
-        default=64,
+        default=128,
         help="Size of hidden layer 2 used by the saved model (default: %(default)s)",
+    )
+    test_parser.add_argument(
+        "--file-name",
+        default="model_weights.pth",
+        help="Name of the full .pth file used to load in the weights (default: %(default)s)",
     )
 
     args = parser.parse_args()
@@ -239,13 +244,13 @@ def hypertune(args, train_dataloader, val_dataloader, device):
 
 
 def train(args, train_dataloader, test_dataloader, device):
-    model = pole_nn(args.bins, 9029, args.hidden_size_1, args.hidden_size2)
+    model = pole_nn(args.bins, 9029, args.hidden_size_1, args.hidden_size_2)
     model.to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(params=model.parameters(), lr=args.lr)
 
     BATCH_SIZE = 32
-    
+    print("Beginning training!")
     for epoch in range(args.epochs):
         train_loss, train_accuracy = 0, 0
         model.train()
@@ -288,14 +293,16 @@ def train(args, train_dataloader, test_dataloader, device):
 
 
 def test(args, test_dataloader, device):
-    model = pole_nn(args.bins, 9029, args.hidden_size_1, args.hidden_size2)
+    model = pole_nn(args.bins, 9029, args.hidden_size_1, args.hidden_size_2)
     model.to(device)
+    model_path = ROOT / "data" / args.file_name
+    model.load_state_dict(torch.load(model_path, weights_only=True))
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(params=model.parameters(), lr=args.lr)
 
     test_loss, test_accuracy = 0, 0
     model.eval()
     BATCH_SIZE = 32
+    print("Starting Testing!")
     with torch.inference_mode():
         for x,y in (test_dataloader):
             x, y = x.to(device), y.to(device)
@@ -311,15 +318,19 @@ def test(args, test_dataloader, device):
         print(f"Test loss: {test_loss:.5f}, Test acc: {test_accuracy:.2f}\n")
 
 
-
-
 def main():
     data_path = ROOT / "data" / "data.hdf5"
-    data = H5Data(data_path)
+    data_path = Path(data_path)
 
-    labels = [int(float(group)) for group, _ in data.index_map]
-
+    if not data_path.exists():
+        FileNotFoundError(f"{data_path} is missing. Please generate the data with pole_nn_data_gen.py")
+    
     args = parse_arguments()
+
+    print("Loading hdf5 data...")
+    data = H5Data(data_path)
+    print("Done!")
+    labels = [int(float(group)) for group, _ in data.index_map]
 
     #could consider adding user input for dataset sizes and batch sizes
     train_idx, temp_idx = train_test_split(
@@ -343,6 +354,7 @@ def main():
     test_sub = Subset(data, test_idx)
 
     BATCH_SIZE = 32
+    print(f"Loading Dataloaders... BATCHSIZE = {BATCH_SIZE}")
     train_dataloader = DataLoader(train_sub, batch_size=BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_sub, batch_size=BATCH_SIZE, shuffle=True)
     test_dataloader = DataLoader(test_sub, batch_size=BATCH_SIZE)
@@ -351,6 +363,7 @@ def main():
     print(f"Length of test dataloader: {len(test_dataloader)} \n")
         
     device = torch.device(args.device)
+    print(f"Using device: {device} \n")
 
     if args.command == "hypertune":
         hypertune(args, train_dataloader, val_dataloader, device)

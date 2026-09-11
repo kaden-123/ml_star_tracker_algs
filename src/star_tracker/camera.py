@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from attitude import (
+from .attitude import (
     e_to_q,
     q_to_e,
     e_to_DCM,
@@ -24,13 +24,13 @@ class Camera:
         pitch = -dec
         self.direction = e_to_q(np.array([np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw)]))
         
-    def id_point(self, id, roll):
+    def id_point(self, star_id, roll):
         """ points camera to star given hr id """
-        row = self.data.loc[self.data["hr"].eq(id)].iloc[0]
+        row = self.data.loc[self.data["hr"].eq(star_id)].iloc[0]
         self.celest_point(row["ra"], row["dec"], roll)
         
     def rand_point(self):
-        """ points to random direction (using shoemake alg) """
+        """ points camera to random direction (using shoemake alg) """
         u1, u2, u3 = np.random.uniform(0, 1, 3)
         w = np.sqrt(1 - u1) * np.sin(2 * np.pi * u2)
         x = np.sqrt(1 - u1) * np.cos(2 * np.pi * u2)

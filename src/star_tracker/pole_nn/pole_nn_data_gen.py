@@ -4,13 +4,15 @@ import pandas as pd
 import h5py
 import argparse
 from pathlib import Path
-from camera import Camera
+from ..camera import Camera
+
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 def make_samples(cam, n_bin, drop_rate, add_rate, 
                  label, n_samples, seed, sigma, 
                  roll_rate, hr_to_idx, res, focal):
     cam.id_point(label, 0)
-    center = res / 2
+    center = np.array(res) / 2
     max_radi = np.sqrt((res[0]**2) + (res[1]**2)) / 2 
     bins = np.linspace(0, max_radi, n_bin + 1)
 
@@ -53,7 +55,8 @@ def make_samples(cam, n_bin, drop_rate, add_rate,
         result = histo[0].astype(np.float32)
         result /= max(result.sum(), 1.0)
         
-        with h5py.File("data.hdf5", "a") as f:
+        data_path = ROOT / "data"
+        with h5py.File(data_path, "a") as f:
             mapped_label = hr_to_idx[label]
             if str(mapped_label) not in f:
                 grp = f.create_group(str(mapped_label))
@@ -99,10 +102,6 @@ def parse_arguments():
         help="Number of distance bins (default: %(default)s)",
     )
     parser.add_argument(
-        "-b", "--bins", type=positive_int, default=25,
-        help="Number of distance bins (default: %(default)s)",
-    )
-    parser.add_argument(
         "-d", "--drop-rate", dest="drop_rate", type=unit_interval, default=0.0,
         help="Star drop rate from 0 to 1 (default: %(default)s)",
     )
@@ -133,11 +132,10 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def train():
+def gen():
     seed = 1
     random.seed(seed)
-
-    ROOT = Path(__file__).resolve().parent().parent().parent()
+    print(ROOT)
     data_path = ROOT / "data" / "hygdata_v42.csv"
     if not data_path.exists():
         FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
@@ -167,4 +165,4 @@ def train():
     print(f"{s} Stars accounted for!")
 
 if __name__ == "__main__":
-    train()
+    gen()

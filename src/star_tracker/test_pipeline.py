@@ -9,10 +9,10 @@ import pandas as pd
 import torch
 import argparse
 from pathlib import Path
-from camera import Camera
-from model_evaluation import pole_nn_eval
-from algorithm import davenportq
-from attitude import (
+from .camera import Camera
+from .model_evaluation import pole_nn_eval
+from .algorithm import davenportq
+from .attitude import (
     e_to_q,
     q_to_e,
     e_to_DCM,
@@ -21,6 +21,8 @@ from attitude import (
     q_to_DCM,
     q_mul
 )
+
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 MODEL_FUNCTIONS = {
     "pole_nn": pole_nn_eval
@@ -39,6 +41,8 @@ def parse_arguments():
     parser.add_argument("-m", "--model", required=True, 
                                         choices=["pole_nn"],
                                         help="Only one model available: pole__nn")
+                                        
+    pole_n=
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--id_point", nargs=2, type=hr_interval, 
@@ -63,7 +67,8 @@ def parse_arguments():
     return (model_name, point)
 
 def main():    
-    data_path = Path("./data/hygdata_v42.csv")
+    data_path = ROOT / "data" / "hygdata_v42.csv"
+    print(data_path)
     if not data_path.exists():
         raise FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
 
@@ -89,12 +94,14 @@ def main():
     hr_to_idx = {hr_id: i for i, hr_id in enumerate(unique_hr_ids)}
     idx_to_hr = {i: hr_id for hr_id, i in hr_to_idx.items()} 
 
+    # consider adding user input on camera specs but will have to make sure it consistent with generated data
     FOCAL = 671
     RES = [360, 360]
     CX = 180
     CY = 180
     coords = cam.create_centroids(FOCAL, RES, None, None)
 
+    # later when new models are added, will have to either remove function registry or make all functions have consistent params?
     predictions = MODEL_FUNCTIONS[model_name](cam, idx_to_hr, FOCAL, RES, 180, 180, coords)
 
     reference_stars = cam.data.loc[mask & data["hr"].isin(predictions[1])]
