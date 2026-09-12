@@ -75,19 +75,19 @@ The bin count and hidden-layer sizes must match the configuration used to train 
 Point the camera at an HR catalog star with a specified roll:
 
 ```bash
-python -m <package>.test_pipeline --model pole_nn --id_point <HR_ID> <ROLL_DEGREES>
+python -m star_tracker.test_pipeline --model pole_nn --id_point <HR_ID> <ROLL_DEGREES>
 ```
 
 Use a random camera orientation:
 
 ```bash
-python -m <package>.test_pipeline --model pole_nn --rand_point
+python -m star_tracker.test_pipeline --model pole_nn --rand_point
 ```
 
 Or provide right ascension in hours, declination in degrees, and roll in degrees:
 
 ```bash
-python -m <package>.test_pipeline --model pole_nn --celest_point <RA_HOURS> <DEC_DEGREES> <ROLL_DEGREES>
+python -m star_tracker.test_pipeline --model pole_nn --celest_point <RA_HOURS> <DEC_DEGREES> <ROLL_DEGREES>
 ```
 Only current ML model is pole_nn,
 
