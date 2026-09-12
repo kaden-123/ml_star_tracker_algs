@@ -55,7 +55,7 @@ def make_samples(cam, n_bin, drop_rate, add_rate,
         result = histo[0].astype(np.float32)
         result /= max(result.sum(), 1.0)
         
-        data_path = ROOT / "data"
+        data_path = ROOT / "data" / "data.hd5f"
         with h5py.File(data_path, "a") as f:
             mapped_label = hr_to_idx[label]
             if str(mapped_label) not in f:
@@ -138,7 +138,7 @@ def gen():
     print(ROOT)
     data_path = ROOT / "data" / "hygdata_v42.csv"
     if not data_path.exists():
-        FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
+        raise FileNotFoundError(f"{data_path} is missing. Please download the data from the link in README.md first.")
 
     #bins, drop_rate, add_rate, n_samples, seed, sigma, roll_rate
     args = parse_arguments()

@@ -42,8 +42,6 @@ def parse_arguments():
                                         choices=["pole_nn"],
                                         help="Only one model available: pole__nn")
                                         
-    pole_n=
-
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--id_point", nargs=2, type=hr_interval, 
                        help="Given int, point camera to the corresponding HR ID with given roll")

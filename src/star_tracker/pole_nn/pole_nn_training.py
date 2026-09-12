@@ -289,14 +289,14 @@ def train(args, train_dataloader, test_dataloader, device):
     if args.save_model:
         name = input("Input name for weights file (with .pth)")
         data_path = ROOT / "data" / name
-        torch.save(model.state_dict(), data_path)
+        torch.save(model.state_dict(), data_path, map_location=device, )
 
 
 def test(args, test_dataloader, device):
     model = pole_nn(args.bins, 9029, args.hidden_size_1, args.hidden_size_2)
     model.to(device)
     model_path = ROOT / "data" / args.file_name
-    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     loss_fn = nn.CrossEntropyLoss()
 
     test_loss, test_accuracy = 0, 0
@@ -323,7 +323,7 @@ def main():
     data_path = Path(data_path)
 
     if not data_path.exists():
-        FileNotFoundError(f"{data_path} is missing. Please generate the data with pole_nn_data_gen.py")
+        raise FileNotFoundError(f"{data_path} is missing. Please generate the data with pole_nn_data_gen.py")
     
     args = parse_arguments()
 

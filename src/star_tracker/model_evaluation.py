@@ -14,10 +14,10 @@ def pole_nn_eval(cam, idx_to_hr, FOCAL, RES, CX, CY, coords):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = pole_nn(N_BINS, N_STAR_CLASSES, HIDDEN_ONE, HIDDEN_TWO)
+    model = pole_nn(N_BINS, N_STAR_CLASSES, HIDDEN_ONE, HIDDEN_TWO).to(device)
     model_name = input("Input .pth file to use as model weights: ")
     model_path = ROOT / "data" / model_name
-    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
 
     center = np.array([RES[1] / 2, RES[0] / 2])
     center_distance = np.linalg.norm((coords[["px", "py"]] - center), axis = 1)
@@ -50,7 +50,7 @@ def pole_nn_eval(cam, idx_to_hr, FOCAL, RES, CX, CY, coords):
             result = histo[0].astype(np.float32)
             result /= max(result.sum(), 1.0)
     
-            x = torch.from_numpy(result).unsqueeze(0)
+            x = torch.from_numpy(result).unsqueeze(0).to(device)
             pred_id = model(x).argmax(dim=1).item()
             pred_ids.append(idx_to_hr[pred_id])
 
