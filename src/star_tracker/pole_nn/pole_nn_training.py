@@ -8,6 +8,9 @@ import numpy as np
 import pandas as pd
 import h5py
 import argparse
+from sklearn.metrics import (
+    classification_report,
+)
 from torch import nn
 from pathlib import Path
 from torch.utils.data import DataLoader, Subset
@@ -299,23 +302,36 @@ def test(args, test_dataloader, device):
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     loss_fn = nn.CrossEntropyLoss()
 
-    test_loss, test_accuracy = 0, 0
+    test_loss, test_accuracy, total_examples = 0, 0, 0
+    all_y_true = []
+    all_y_pred = []
+
     model.eval()
-    BATCH_SIZE = 32
     print("Starting Testing!")
     with torch.inference_mode():
         for x,y in (test_dataloader):
             x, y = x.to(device), y.to(device)
+            batch_size = y.size(0)
 
+            total_examples += batch_size
             y_pred = model(x)
+
             test_loss += loss_fn(y_pred, y).item()
             test_pred = torch.argmax(y_pred, dim=1)
             test_accuracy += (test_pred == y).sum().item()
 
-        test_loss /= len(test_dataloader)
-        test_accuracy /= len(test_dataloader) * BATCH_SIZE
+            all_y_true.append(y.cpu())
+            all_y_pred.append(test_pred.cpu())
 
+        
+        test_accuracy /= total_examples
+        test_loss /= len(test_dataloader)
         print(f"Test loss: {test_loss:.5f}, Test acc: {test_accuracy:.2f}\n")
+        
+        y_true = torch.cat(all_y_true).numpy()
+        y_pred = torch.cat(all_y_pred).numpy()
+        print(f"Classification Report:")
+        print(classification_report(y_true, y_pred, zero_division=0))
 
 
 def main():
