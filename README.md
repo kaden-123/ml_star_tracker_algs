@@ -38,6 +38,8 @@ pip install requirements.txt
 Download `hygdata_v42.csv` from the HYG star database and place it in the project's `data/` directory.
 https://www.astronexus.com/projects/hyg
 
+Note: All commands are to be run in the src/ folder
+
 
 ## Generate training data
 
